@@ -6,8 +6,8 @@ import querystring from "querystring";
 export default class ShopifyAPI {
 
   constructor(config) {
-   this.config = config;
-    this.baseUrl = "https://" + this.config.domain;
+    this.config = config;
+    this.baseURL = "https://" + this.config.shop;
     this.reqHeaders = {
       "accept": "application/json",
       "content-type": "application/json",
@@ -18,14 +18,14 @@ export default class ShopifyAPI {
   get(resource, queryObj = {}) {
     let query = querystring.stringify(queryObj);
 
-    return fetch(this.baseUrl + resource + query, {
+    return fetch(this.baseURL + resource + query, {
       method: "GET",
       headers: this.reqHeaders
     });
   }
 
   post(resource, body = {}) {
-    return fetch(this.baseUrl + resource, {
+    return fetch(this.baseURL + resource, {
       method: "POST",
       body: JSON.stringify(body),
       headers: this.reqHeaders
@@ -33,7 +33,7 @@ export default class ShopifyAPI {
   }
 
   put(resource, body = {}) {
-    return fetch(this.baseUrl + resource, {
+    return fetch(this.baseURL + resource, {
       method: "PUT",
       body: JSON.stringify(body),
       headers: this.reqHeaders
@@ -41,7 +41,7 @@ export default class ShopifyAPI {
   }
 
   delete(resource) {
-    return fetch(this.baseUrl + resource, {
+    return fetch(this.baseURL + resource, {
       method: "DELETE",
       headers: this.reqHeaders
     });
@@ -57,12 +57,17 @@ export default class ShopifyAPI {
     return `${this.baseURL}/admin/oauth/authorize?${queryStr}`;
   }
 
-  validateSignature(query) {
-    let queryStr = querystring.stringify(
-      _.omit(query, ["hmac", "signature"])
-    );
+  verifySignature(query) {
+    let sortedParams = _.chain(query)
+      .omit(["hmac", "signature"])
+      .pairs()
+      .sort()
+      .map(item => { return item.join("="); })
+      .join("&")
+      .value();
+
     let digest = crypto.createHmac("sha256", this.config.secret)
-      .update(queryStr)
+      .update(sortedParams)
       .digest("hex");
 
     return query.hmac === digest;
