@@ -2,10 +2,30 @@ import crypto from "crypto";
 import _ from "lodash";
 import fetch from "node-fetch";
 import querystring from "querystring";
+import chalk from "chalk";
+
+const red = chalk.bold.red;
+
+function validateConfig(config) {
+  const requiredKeys = ["shop", "api_key", "secret", "scope", "redirect_uri"];
+  let missingKeys = requiredKeys.filter(key => {
+    if( _.has(config, key)) {
+      return false;
+    } else {
+      return true;
+    }
+  }).join(", ");
+
+  if (missingKeys.length > 0) {
+    console.error(red(`Configuration error: Missing ${missingKeys}`));
+    throw new Error(`Configuration error`);
+  }
+}
 
 export default class ShopifyAPI {
 
   constructor(config) {
+    validateConfig(config);
     this.config = config;
     this.baseURL = "https://" + this.config.shop;
     this.reqHeaders = {
@@ -62,7 +82,7 @@ export default class ShopifyAPI {
       .omit(["hmac", "signature"])
       .pairs()
       .sort()
-      .map(item => { return item.join("="); })
+      .map(item => item.join("="))
       .join("&")
       .value();
 
@@ -86,7 +106,7 @@ export default class ShopifyAPI {
       .omit(["signature"])
       .pairs()
       .sort()
-      .map(item => { return item.join("="); })
+      .map(item => item.join("="))
       .join("")
       .value();
 

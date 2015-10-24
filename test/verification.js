@@ -20,4 +20,23 @@ describe("verification", () => {
 
     expect(isValid).toBe(true);
   });
+
+  it("should verify app proxy requests", () => {
+    const Shopify = new ShopifyAPI({
+      shop: "shop-name.myshopify.com",
+      secret: "hush"
+    });
+
+    let query = {
+      "extra": ["1", "2"],
+      "shop": "shop-name.myshopify.com",
+      "path_prefix": "/apps/awesome_reviews",
+      "timestamp": "1317327555",
+      "signature": "a9718877bea71c2484f91608a7eaea1532bdf71f5c56825065fa4ccabe549ef3"
+    };
+
+    let isValid = Shopify.verifyProxySignature(query);
+
+    expect(isValid).toBe(true);
+  });
 });
